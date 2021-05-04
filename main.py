@@ -13,6 +13,9 @@ def get_quote():
 # basic bot example
 client = discord.Client()
 
+sad_words = ["sad", "depressed"]
+starter_encouragements = ["Cheer up!"]
+
 # events for the bot to work
 @client.event
 async def on_ready():
@@ -20,10 +23,15 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
+    msg = message.content
     if message.author == client.user:
         return
 
-    if message.content.startswith("$hello"):
-        await message.channel.send("Hello!")
+    if msg.startswith("!inspire"):
+        quote=get_quote()
+        await message.channel.send(quote)
+
+    if any(word in msg for word in sad_words):
+        await message.send(starter_encouragements[0])
 
 client.run(os.getenv("TOKEN"))
