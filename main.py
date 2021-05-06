@@ -1,14 +1,17 @@
 from dotenv import load_dotenv
 from flask import Flask
 import discord
+import logging
 import os
 import requests
 import json
 import mysql.connector
 import random
 
-# .env file from root
+# error logging
+logging.basicConfig(level=logging.info)
 
+# .env file
 load_dotenv()
 
 # initializing variables from env file
@@ -31,7 +34,7 @@ db = mysql.connector.connect(
 )
 
 mycursor = db.cursor()
-mycursor.execute("CREATE DATABASE reminders")
+# mycursor.execute("CREATE DATABASE reminders")
 
 # Bot from youtube tutorial
 def get_quote():
@@ -74,6 +77,7 @@ async def on_message(message):
 
     if msg.startswith("!setdate"):
         reminder = msg.split("!setdate ",1)[1]
+        print(reminder)
         await message.channel.send("Reminder has been set")
 
 client.run(os.getenv("TOKEN"))
