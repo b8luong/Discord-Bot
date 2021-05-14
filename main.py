@@ -32,10 +32,11 @@ db = mysql.connector.connect(
     host=sqlHost,
     user=sqlUser,
     passwd=sqlPasswd,
-    database=sqlDatabase
+    database=sqlDatabase,
+    autocommit=True
 )
 
-mycursor = db.cursor()
+
 # mycursor.execute("CREATE DATABASE reminders")
 # mycursor.execute("CREATE TABLE reminders (id INT AUTO_INCREMENT PRIMARY KEY, date VARCHAR(255), who VARCHAR(255), what VARCHAR(255), remind VARCHAR(255))")
 
@@ -97,15 +98,18 @@ async def on_message(message):
         # store the message to remind
         what = list[3].split("What: ",1)[1]
         print(what)
+        # cursor for database
+        mycursor = db.cursor()
         # store into table for the future
         mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, 'fill')",(when_str,who,what))
-
+        db.commit()
+        mycursor.close()
         # grab the user id for who set the reminder
         user = message.author.id
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
         await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
-client.run(os.getenv("TOKEN"))
 
+client.run(os.getenv("TOKEN"))
 # start app
 if __name__ == "__main__":
     app.run(debug=True)
