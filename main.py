@@ -8,6 +8,7 @@ import json
 import mysql.connector
 import time
 from datetime import datetime
+from threading import Timer
 
 # error logging
 logging.basicConfig(level=logging.INFO)
@@ -40,7 +41,6 @@ db = mysql.connector.connect(
 # mycursor.execute("CREATE DATABASE reminders")
 # mycursor.execute("CREATE TABLE reminders (id INT AUTO_INCREMENT PRIMARY KEY, date VARCHAR(255), who VARCHAR(255), what VARCHAR(255), remind VARCHAR(255))")
 
-
 # Bot from youtube tutorial
 def get_quote():
     response = requests.get("https://zenquotes.io/api/random")
@@ -53,6 +53,11 @@ client = discord.Client()
 
 sad_words = ["sad", "depressed"]
 starter_encouragements = ["Cheer up!"]
+
+# getting current time and date
+now = datetime.now()
+formatNow = now.strftime("%m/%d/%Y %H:%M")
+print(formatNow)
 
 # events for the bot to work
 @client.event
@@ -92,6 +97,9 @@ async def on_message(message):
         when_str = list[1].split("When: ",1)[1]
         date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M")
         print(date_obj)
+
+
+
         # store the people to mention for the reminder
         who = list[2].split("Who: ",1)[1]
         print(who)
