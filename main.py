@@ -90,7 +90,7 @@ async def on_message(message):
 
         # store the time of the event
         when_str = list[1].split("When: ",1)[1]
-        date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M:%S")
+        date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M")
         print(date_obj)
         # store the people to mention for the reminder
         who = list[2].split("Who: ",1)[1]
@@ -103,7 +103,14 @@ async def on_message(message):
         # store into table for the future
         mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, 'fill')",(when_str,who,what))
         db.commit()
-        mycursor.close()
+
+        # test code for querying for table data
+        mycursor.execute("SELECT * FROM reminders")
+        table = mycursor.fetchall()
+        for rows in table:
+            print(rows)
+
+
         # grab the user id for who set the reminder
         user = message.author.id
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
