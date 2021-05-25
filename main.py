@@ -104,11 +104,11 @@ async def on_message(message):
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
         await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
-@tasks.loop(seconds=5)
-async def print():
-    print("Hello")
-    # channel = "<#839197220431331349>"
-    # await channel.send("hello")
+# @tasks.loop(seconds=5)
+# async def print():
+#     print("Hello")
+#     # channel = "<#839197220431331349>"
+#     # await channel.send("hello")
 
 print.start()
 
