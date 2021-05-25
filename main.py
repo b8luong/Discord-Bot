@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 from flask import Flask
 import discord
+from discord.ext import tasks, commands
 import logging
 import os
 import requests
@@ -41,18 +42,8 @@ db = mysql.connector.connect(
 # mycursor.execute("CREATE DATABASE reminders")
 # mycursor.execute("CREATE TABLE reminders (id INT AUTO_INCREMENT PRIMARY KEY, date VARCHAR(255), who VARCHAR(255), what VARCHAR(255), remind VARCHAR(255))")
 
-# Bot from youtube tutorial
-def get_quote():
-    response = requests.get("https://zenquotes.io/api/random")
-    json_data = json.loads(response.text)
-    quote = json_data[0]['q'] + " -" + json_data[0]['a']
-    return quote
-
 # basic bot example
 client = discord.Client()
-
-sad_words = ["sad", "depressed"]
-starter_encouragements = ["Cheer up!"]
 
 # getting current time and date
 now = datetime.now()
@@ -68,24 +59,6 @@ async def on_ready():
 async def on_message(message):
     msg = message.content
 
-    if message.author == client.user:
-        return
-
-    if msg.startswith("!inspire"):
-        quote=get_quote()
-        await message.channel.send(quote)
-
-    # if any(word in msg for word in sad_words):
-    #     await message.channel.send(random.choice(starter_encouragements))
-
-    # example to do split
-    '''
-    if msg.startswith("$new"):
-        encouraging_message = msg.split("$new ",1)[1]
-        update_encouragements(encouraging_message)
-        await message.channel.send("New encouraging message added.")
-    '''
-
     if msg.startswith("!setdate"):
         # split the message on the command word
         content = msg.split("!setdate",1)[1]
@@ -99,17 +72,19 @@ async def on_message(message):
         print(date_obj)
 
 
-
         # store the people to mention for the reminder
         who = list[2].split("Who: ",1)[1]
         print(who)
         # store the message to remind
         what = list[3].split("What: ",1)[1]
         print(what)
+        # store how often to remind
+        remind = list[4].split("Remind: ",1)[1]
+        print(remind)
         # cursor for database
         mycursor = db.cursor()
         # store into table for the future
-        mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, 'fill')",(when_str,who,what))
+        mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, %s)",(when_str,who,what,remind))
         db.commit()
 
         # test code for querying for table data
@@ -117,12 +92,25 @@ async def on_message(message):
         table = mycursor.fetchall()
         for rows in table:
             print(rows)
+        mycursor.execute("SELECT date FROM reminders WHERE id")
+        all_dates = mycursor.fetchall()
 
+        print(all_dates[4])
+        date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M")
+        print(date_obj)
 
         # grab the user id for who set the reminder
         user = message.author.id
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
         await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
+
+@tasks.loop(seconds=5)
+async def print():
+    print("Hello")
+    # channel = "<#839197220431331349>"
+    # await channel.send("hello")
+
+print.start()
 
 client.run(os.getenv("TOKEN"))
 # start app
