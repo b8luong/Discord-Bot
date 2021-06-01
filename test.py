@@ -1,3 +1,5 @@
+# THIS FILE IS USED TO DEVELOP FUNCTIONS TO BE USED IN MAIN
+
 from dotenv import load_dotenv
 from flask import Flask
 import discord
@@ -9,6 +11,7 @@ import mysql.connector
 import time
 from datetime import datetime
 from threading import Timer
+import dateutil.parser
 
 # .env file
 load_dotenv()
@@ -30,7 +33,6 @@ db = mysql.connector.connect(
     autocommit=True
 )
 
-print("test")
 mycursor = db.cursor()
 # mycursor.execute("SELECT * FROM reminders")
 # table = mycursor.fetchall()
@@ -40,13 +42,13 @@ mycursor.execute("SELECT date FROM reminders")
 now = datetime.now()
 formatNow = now.strftime("%m/%d/%y %H:%M")
 print(formatNow)
+# grabbing the dates from the database
 all_dates = mycursor.fetchall()
 for i in range(len(all_dates)):
     all_datesStr = str(all_dates[i])
     date = all_datesStr.replace("(",'').replace(")",'').replace(",",'').replace("'","")
-    # print(date)
-    date_obj = datetime.strptime(date, "%m/%d/%y %H:%M")
-    date_obj = date_obj.strftime("%m/%d/%y %H:%M")
+    print(date)
+    date_obj = datetime.strptime(date, "%m/%d/%Y %H:%M")
     print(date_obj)
     print(formatNow)
     if formatNow == date_obj:

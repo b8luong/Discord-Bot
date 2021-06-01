@@ -10,6 +10,8 @@ import mysql.connector
 import time
 from datetime import datetime
 from threading import Timer
+import dateutil.parser
+import asyncio
 
 # error logging
 logging.basicConfig(level=logging.INFO)
@@ -54,6 +56,7 @@ print(formatNow)
 @client.event
 async def on_ready():
     print("We have logged in as {0.user}".format(client))   # 0 becomes client and user is how you get the username
+    check_time.start()
 
 @client.event
 async def on_message(message):
@@ -66,25 +69,26 @@ async def on_message(message):
         list = content.split("\n")
         print(list)
 
-        # store the time of the event
+        # variable for the time and date
         when_str = list[1].split("When: ",1)[1]
-        date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M")
+        date_obj = dateutil.parser.parse(when_str)
+        date_obj = date_obj.strftime("%m/%d/%Y %H:%M")
         print(date_obj)
 
 
-        # store the people to mention for the reminder
+        # variable to store the people to mention for the reminder
         who = list[2].split("Who: ",1)[1]
         print(who)
-        # store the message to remind
+        # variable to store the message to remind
         what = list[3].split("What: ",1)[1]
         print(what)
-        # store how often to remind
+        # variable store how often to remind
         remind = list[4].split("Remind: ",1)[1]
         print(remind)
         # cursor for database
         mycursor = db.cursor()
         # store into table for the future
-        mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, %s)",(when_str,who,what,remind))
+        mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, %s)",(str(date_obj),who,what,remind))
         db.commit()
 
         # test code for querying for table data
@@ -95,22 +99,19 @@ async def on_message(message):
         mycursor.execute("SELECT date FROM reminders WHERE id")
         all_dates = mycursor.fetchall()
 
-        print(all_dates[4])
-        date_obj = datetime.strptime(when_str, "%m/%d/%y %H:%M")
-        print(date_obj)
-
         # grab the user id for who set the reminder
         user = message.author.id
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
         await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
-# @tasks.loop(seconds=5)
-# async def print():
-#     print("Hello")
-#     # channel = "<#839197220431331349>"
-#     # await channel.send("hello")
+@tasks.loop(minutes=1)
+async def check_time():
+    channel = client.get_channel(839197220431331349)
+    await channel.send("hello")
+    # channel = "<#839197220431331349>"
+    # await
 
-print.start()
+# print.start()
 
 client.run(os.getenv("TOKEN"))
 # start app
