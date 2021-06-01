@@ -38,18 +38,4 @@ mycursor = db.cursor()
 # table = mycursor.fetchall()
 # for rows in table:
 #     print(rows)
-mycursor.execute("SELECT date FROM reminders")
-now = datetime.now()
-formatNow = now.strftime("%m/%d/%y %H:%M")
-print(formatNow)
-# grabbing the dates from the database
-all_dates = mycursor.fetchall()
-for i in range(len(all_dates)):
-    all_datesStr = str(all_dates[i])
-    date = all_datesStr.replace("(",'').replace(")",'').replace(",",'').replace("'","")
-    print(date)
-    date_obj = datetime.strptime(date, "%m/%d/%Y %H:%M")
-    print(date_obj)
-    print(formatNow)
-    if formatNow == date_obj:
-        print("It's time")
+

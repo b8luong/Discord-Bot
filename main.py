@@ -47,11 +47,6 @@ db = mysql.connector.connect(
 # basic bot example
 client = discord.Client()
 
-# getting current time and date
-now = datetime.now()
-formatNow = now.strftime("%m/%d/%Y %H:%M")
-print(formatNow)
-
 # events for the bot to work
 @client.event
 async def on_ready():
@@ -104,14 +99,32 @@ async def on_message(message):
         # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
         await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
+# checking every minute to see if its time to remind
 @tasks.loop(minutes=1)
 async def check_time():
     channel = client.get_channel(839197220431331349)
-    await channel.send("hello")
-    # channel = "<#839197220431331349>"
-    # await
+    # await channel.send("hello")
+    mycursor = db.cursor()
+    mycursor.execute("SELECT date FROM reminders")
 
-# print.start()
+    # getting current date and time
+    now = datetime.now()
+    formatNow = now.strftime("%m/%d/%Y %H:%M")
+    print(formatNow)
+
+    # grabbing the dates from the database
+    all_dates = mycursor.fetchall()
+    for i in range(len(all_dates)):
+        all_datesStr = str(all_dates[i])
+        date = all_datesStr.replace("(", '').replace(")", '').replace(",", '').replace("'", "")
+        # print(date)
+        date_obj = datetime.strptime(date, "%m/%d/%Y %H:%M")
+        date_obj = date_obj.strftime("%m/%d/%Y %H:%M")
+        print(date_obj)
+        print(formatNow)
+        if formatNow == date_obj:
+            print("It's time")
+            await channel.send("It's time") # replace this with detailed information after
 
 client.run(os.getenv("TOKEN"))
 # start app
