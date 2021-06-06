@@ -34,8 +34,17 @@ db = mysql.connector.connect(
 )
 
 mycursor = db.cursor()
-# mycursor.execute("SELECT * FROM reminders")
-# table = mycursor.fetchall()
-# for rows in table:
-#     print(rows)
-
+mycursor.execute("SELECT date FROM reminders")
+# grabbing the dates from the database
+allDates = mycursor.fetchall()
+mycursor.execute("SELECT who FROM reminders")
+allWho = mycursor.fetchall()
+mycursor.execute("SELECT what FROM reminders")
+allWhat = mycursor.fetchall()
+for i in range(len(allDates)):
+    date = allDates[i][0]
+    print(date)
+    date_obj = datetime.strptime(date, "%m/%d/%Y %H:%M")
+    date_obj = date_obj.strftime("%m/%d/%Y %H:%M")
+    if date_obj == date_obj:
+        print(allWhat[0])

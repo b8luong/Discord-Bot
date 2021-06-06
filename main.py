@@ -113,18 +113,21 @@ async def check_time():
     print(formatNow)
 
     # grabbing the dates from the database
-    all_dates = mycursor.fetchall()
-    for i in range(len(all_dates)):
-        all_datesStr = str(all_dates[i])
-        date = all_datesStr.replace("(", '').replace(")", '').replace(",", '').replace("'", "")
-        # print(date)
+    allDates = mycursor.fetchall()
+    mycursor.execute("SELECT who FROM reminders")
+    allWho = mycursor.fetchall()
+    mycursor.execute("SELECT what FROM reminders")
+    allWhat = mycursor.fetchall()
+    for i in range(len(allDates)):
+        date = allDates[i][0]
+        print(date)
         date_obj = datetime.strptime(date, "%m/%d/%Y %H:%M")
         date_obj = date_obj.strftime("%m/%d/%Y %H:%M")
-        print(date_obj)
-        print(formatNow)
         if formatNow == date_obj:
             print("It's time")
-            await channel.send("It's time") # replace this with detailed information after
+            await channel.send(f"<@{user}>\nWhen: placeholder\nWho: {allWho[i][0]}\nWhat: {allWhat[i][0]}\n")
+
+
 
 client.run(os.getenv("TOKEN"))
 # start app
