@@ -1,4 +1,6 @@
 from PIL import Image
+from googletrans import Translator, constants
+
 import pytesseract
 import urllib.request
 import requests
@@ -18,4 +20,10 @@ def OCR(imgURL, language):
     img.load()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Users\Billy\AppData\Local\Programs\Tesseract-OCR\tesseract'
     text = pytesseract.image_to_string(img, lang=language)  #Specify language to look after!
-    return(text)
+    return(text.replace('\n',' '))
+
+def translate(string, languageTo="en", languageFrom="auto"):
+    # init the Google API translator
+    translator = Translator()
+    translation = translator.translate(string,)
+    print(f"{translation.origin} ({translation.src}) --> {translation.text} ({translation.dest})")

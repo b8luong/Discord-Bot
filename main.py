@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask
 import discord
 from discord.ext import tasks, commands
-from tesseract import OCR
+from extFunction import OCR
 import logging
 import os
 import requests
@@ -49,6 +49,8 @@ db = mysql.connector.connect(
 # basic bot example
 client = discord.Client()
 
+from discord.ext import commands
+
 # events for the bot to work
 @client.event
 async def on_ready():
@@ -56,10 +58,17 @@ async def on_ready():
     # check_time.start()
 
 # function for whenever a message is sent
-@client.event
-async def on_message(message):
-    msg = message.attachments[0]
-    print(msg)
+# @client.event
+# async def on_message(message):
+#     # if the message sender is the bot, return nothing
+#     if message.author == client.user:
+#         return
+#     imgLink = message.attachments[0]
+#     language = message.content
+#     print(imgLink)
+#     print(language)
+#     await message.channel.send(OCR(str(imgLink),str(language)))
+
     # if msg.startswith("!setdate"):
     #     # split the message on the command word
     #     content = msg.split("!setdate",1)[1]
@@ -102,9 +111,6 @@ async def on_message(message):
     #     # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
     #     await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
-# @bot.command()
-# async def setdate(ctx, *args):
-#     await ctx.send(arg)
 
 # checking every minute to see if its time to remind
 # @tasks.loop(minutes=1)
@@ -133,9 +139,6 @@ async def on_message(message):
 #         if formatNow == date_obj:
 #             print("It's time")
 #             await channel.send(f"<@{user}>\nWhen: placeholder\nWho: {allWho[i][0]}\nWhat: {allWhat[i][0]}\n")
-
-def msgOCR():
-    OCR()
 
 client.run(os.getenv("TOKEN"))
 # start app
