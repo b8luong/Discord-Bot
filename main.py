@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from flask import Flask
 import discord
 from discord.ext import tasks, commands
-from extFunction import OCR
+from extFunction import OCR, translate2
 import logging
 import os
 import requests
@@ -46,28 +46,40 @@ db = mysql.connector.connect(
 # mycursor.execute("CREATE DATABASE reminders")
 # mycursor.execute("CREATE TABLE reminders (id INT AUTO_INCREMENT PRIMARY KEY, date VARCHAR(255), who VARCHAR(255), what VARCHAR(255), remind VARCHAR(255))")
 
-# basic bot example
-client = discord.Client()
+# # basic bot example
+# client = discord.Client()
 
-from discord.ext import commands
+bot = commands.Bot(command_prefix='!')
 
 # events for the bot to work
-@client.event
+@bot.event
 async def on_ready():
-    print("We have logged in as {0.user}".format(client))   # 0 becomes client and user is how you get the username
+    print("We have logged in as {0.user}".format(bot))   # 0 becomes client and user is how you get the username
     # check_time.start()
 
 # function for whenever a message is sent
-# @client.event
-# async def on_message(message):
-#     # if the message sender is the bot, return nothing
-#     if message.author == client.user:
-#         return
-#     imgLink = message.attachments[0]
-#     language = message.content
-#     print(imgLink)
-#     print(language)
-#     await message.channel.send(OCR(str(imgLink),str(language)))
+@bot.event
+async def on_message(message):
+    # if the message sender is the bot, return nothing
+    if message.author == bot.user:
+        return
+    msg = message.content
+    # !ocr command in here since bot commands do not work with images
+    if msg.startswith("!ocr"):
+        try:
+            content = msg.split("!ocr",1)[1].strip()
+            print(content)
+            imgLink = message.attachments[0]
+            language = content
+            print(imgLink)
+            print(language)
+            await message.channel.send(OCR(str(imgLink),str(language)))
+        except:
+            await message.channel.send("Image not clear")
+    try:
+        await bot.process_commands(message)
+    except:
+        return
 
     # if msg.startswith("!setdate"):
     #     # split the message on the command word
@@ -112,6 +124,38 @@ async def on_ready():
     #     await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
 
+@bot.command()
+#command is already implemented in on message so this is here to remove errors of calling a command not decorated
+async def ocr(ctx,*args):
+    return
+
+# command usage: !eng [string]
+@bot.command()
+async def eng(ctx,*args):
+    if len(args) == 0:
+        await ctx.send("Purpose: Auto detect language and convert to english \n"
+                       "If you want to convert to a different language that isn't english, use !translate\n\n"
+                       "Command Usage: !eng [words you want to translate to english]")
+    else:
+        string = " ".join(args)
+        translation = translate2(string)
+        await ctx.send(translation)
+
+# command usage: !translate [string], [translate from], [translate to]
+@bot.command()
+async def translate(ctx,*args):
+    if len(args) == 0:
+        await ctx.send("Purpose: Translate from one language to another (must specify which languages)\n\n"
+                       "Command Usage: !translate [words you want to translate] [language you want to translate from] [language you want to translate to]")
+    else:
+        string = args[:-2]
+        string = " ".join(string)
+        destLang = args[-1]
+        sourceLang = args[-2]
+        translation = translate2(string,destLang,sourceLang)
+        print(translation)
+        await ctx.send(translation)
+
 # checking every minute to see if its time to remind
 # @tasks.loop(minutes=1)
 # async def check_time():
@@ -140,7 +184,7 @@ async def on_ready():
 #             print("It's time")
 #             await channel.send(f"<@{user}>\nWhen: placeholder\nWho: {allWho[i][0]}\nWhat: {allWhat[i][0]}\n")
 
-client.run(os.getenv("TOKEN"))
+bot.run(os.getenv("TOKEN"))
 # start app
 if __name__ == "__main__":
     app.run(debug=True)
