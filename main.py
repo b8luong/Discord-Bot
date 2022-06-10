@@ -4,6 +4,7 @@ from flask import Flask
 import discord
 from discord.ext import tasks, commands
 from extFunction import OCR, translate2
+from webscrapeFunction import redflagsEmbed, redflagsPostings
 import logging
 import os
 import requests
@@ -123,6 +124,28 @@ async def on_message(message):
     #     # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
     #     await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
+@bot.command()
+async def embed(ctx):
+    soupPostings = redflagsPostings()
+    urls, titles, postings = redflagsEmbed(soupPostings)
+    for i in range(len(postings)):
+        description = ""
+        url = urls[i]
+        title = titles[i]
+        posting = postings[i]
+        for key in posting:
+            if key == "Deal Link:":
+                if len(posting[key]) > 50:
+                    shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                else:
+                    shortenedURL = posting[key]
+                description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
+            else:
+                description += "**{}** {}\n".format(key, posting[key])
+        string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
+        string2 = string[0:40] + " ... " + string[-10:]
+        embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
+        await ctx.send(embed=embed)
 
 @bot.command()
 #command is already implemented in on message so this is here to remove errors of calling a command not decorated
