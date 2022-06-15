@@ -1,2 +1,2 @@
-# calendarBot
-A reminder bot for discord
+# discordBot
+A personal discord bot with functions that I would use
