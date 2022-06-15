@@ -3,9 +3,6 @@ from googletrans import Translator, constants
 
 import pytesseract
 import urllib.request
-import requests
-import shutil
-from urllib.request import Request, urlopen
 import pycountry
 
 def OCR(imgURL, language):

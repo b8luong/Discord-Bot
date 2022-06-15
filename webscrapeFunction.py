@@ -2,13 +2,6 @@ import requests
 from bs4 import BeautifulSoup
 import time
 
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-import os
-from twilio.rest import Client
-import time
-from dotenv import load_dotenv
-
 # This file will be used to contain webscraping functions
 
 # browser settings

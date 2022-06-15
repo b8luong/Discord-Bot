@@ -7,15 +7,8 @@ from extFunction import OCR, translate2
 from webscrapeFunction import redflagsEmbed, redflagsPostings
 import logging
 import os
-import requests
-import json
 import mysql.connector
-import time
-from datetime import datetime
-from threading import Timer
-import dateutil.parser
 import asyncio
-import difflib
 
 # error logging
 logging.basicConfig(level=logging.INFO)
