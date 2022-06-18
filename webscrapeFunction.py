@@ -19,6 +19,8 @@ def redflagsPostings():
     # remove sticky (aka ad posts)
     for div in soup.find_all("li", {'class':'sticky'}):
         div.decompose()
+    for div in soup.find_all("li", {'class':'deleted'}):
+        div.decompose()
     target = soup.select('li.row.topic')
     ids = soup.select('div.thread_meta_large_primary')
     # print(soup)
