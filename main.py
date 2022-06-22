@@ -134,7 +134,7 @@ async def rfd(ctx):
                     # if we went through all the ids, just send the last 5 posts
                     elif ids2[-1] == ids2[i] and ids[0] != ids2[i]:
                         print("hello")
-                        oldPost = 20
+                        oldPost = 5
             # keep track of where the latest old post in the new postings list
             print(oldPost)
             # returning only the new posts
