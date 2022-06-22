@@ -48,16 +48,20 @@ def redflagsEmbed(postings):
         soup = BeautifulSoup(response.content, 'html.parser')
         # print(soup)
         details = soup.find("dl", {'class':"post_offer_fields"})
-        dt = details.find_all("dt")
-        dd = details.find_all("dd")
-        title = soup.find("h2", {'class':'post_title first'}).text
-        # print(dt)
-        # print(dd[0])
-        for i in range(len(dt)):
-            if i == 0 and dt[0].text == 'Deal Link:':
-                output[dt[i].text] = dd[0].find("a")["href"]
-            else:
-                output[dt[i].text] = dd[i].text
+        if details:
+            dt = details.find_all("dt")
+            dd = details.find_all("dd")
+            for i in range(len(dt)):
+                if i == 0 and dt[0].text == 'Deal Link:':
+                    output[dt[i].text] = dd[0].find("a")["href"]
+                else:
+                    output[dt[i].text] = dd[i].text
+        else:
+            body = soup.find("div", {'class':"content"})
+            firstURL = body.find('a')["href"]
+            output["Deal Link:"] = firstURL
+            output["Body:"] = body.text
+        title = soup.find("h2", {'class': 'post_title first'}).text
         urlList.append(fullURL)
         titleList.append(title)
         outputList.append(output)
