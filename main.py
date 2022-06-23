@@ -160,7 +160,7 @@ async def rfd(ctx):
                 embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
                 await ctx.send(embed=embed)
             ids = ids2
-            await asyncio.sleep(600)
+            await asyncio.sleep(120)
         except Exception as e:
             print("error")
             print(e)
