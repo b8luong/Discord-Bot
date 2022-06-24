@@ -127,45 +127,50 @@ async def rfd(ctx):
             # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
             oldPost = 0
             if ids != ids2:
-                for i in range(len(ids2)):
-                    if ids[0] == ids2[i]:
-                        oldPost = i
-                        break
+                print("There was a change")
+                for i in range(len(ids)):
+                    for j in range(len(ids2)):
+                        if ids[i] == ids2[j]:
+                            oldPost = j
+                            break
                     # if we went through all the ids, just send the last 5 posts
-                    elif ids2[-1] == ids2[i] and ids[0] != ids2[i]:
-                        print("hello")
-                        oldPost = 5
-            # keep track of where the latest old post in the new postings list
-            print(oldPost)
-            # returning only the new posts
-            soupPostings = soupPostings[0:oldPost]
-            urls, titles, postings = redflagsEmbed(soupPostings)
-            print("postings made it here (if error occurred)")
-            for i in range(len(postings)):
-                description = ""
-                url = urls[i]
-                title = titles[i]
-                posting = postings[i]
-                for key in posting:
-                    if key == "Deal Link:":
-                        if len(posting[key]) > 50:
-                            shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                        elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
+                            oldPost = 5
+                    # once we find a matching post, break out of outer loop
+                    if oldPost != 0:
+                        break
+                # keep track of where the latest old post in the new postings list
+                print(oldPost)
+                # returning only the new posts
+                soupPostings = soupPostings[0:oldPost]
+                urls, titles, postings = redflagsEmbed(soupPostings)
+                print("postings made it here (if error occurred)")
+                for i in range(len(postings)):
+                    description = ""
+                    url = urls[i]
+                    title = titles[i]
+                    posting = postings[i]
+                    for key in posting:
+                        if key == "Deal Link:":
+                            if len(posting[key]) > 50:
+                                shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                            else:
+                                shortenedURL = posting[key]
+                            description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
                         else:
-                            shortenedURL = posting[key]
-                        description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
-                    else:
-                        description += "**{}** {}\n".format(key, posting[key])
-                string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
-                string2 = string[0:40] + " ... " + string[-10:]
-                embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
-                await ctx.send(embed=embed)
+                            description += "**{}** {}\n".format(key, posting[key])
+                    string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
+                    string2 = string[0:40] + " ... " + string[-10:]
+                    embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
+                    await ctx.send(embed=embed)
             ids = ids2
+            print("End of command")
             await asyncio.sleep(120)
         except Exception as e:
             print("error")
             print(e)
             await ctx.send("There was an error")
-            await asyncio.sleep(30)
+            await asyncio.sleep(120)
 
 
 @bot.command()

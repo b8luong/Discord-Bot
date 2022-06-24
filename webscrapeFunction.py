@@ -22,15 +22,11 @@ def redflagsPostings():
     for div in soup.find_all("li", {'class':'deleted'}):
         div.decompose()
     target = soup.select('li.row.topic')
-    ids = soup.select('a.topic_title_link')
-    print(ids)
-    urls = []
-    for id in ids:
-        urls.append(id['href'])
+    ids = soup.select('div.thread_meta_large_primary')
+    print('ids: {}'.format(ids))
     end = time.time()
     duration = end-start
-    print(duration)
-    return urls, target
+    return ids, target
 
 # function to return things that is necessary to create an embed
 def redflagsEmbed(postings):
