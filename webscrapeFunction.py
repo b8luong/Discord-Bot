@@ -54,7 +54,11 @@ def redflagsEmbed(postings):
                     output[dt[i].text] = dd[i].text
         else:
             body = soup.find("div", {'class':"content"})
-            firstURL = body.find('a')["href"]
+            firstATag = body.find('a')
+            if firstATag:
+                firstURL = firstATag['href']
+            else:
+                firstURL = "No Link"
             output["Deal Link:"] = firstURL
             output["Body:"] = body.text
         title = soup.find("h2", {'class': 'post_title first'}).text
