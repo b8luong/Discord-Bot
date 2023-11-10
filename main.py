@@ -46,10 +46,16 @@ db = mysql.connector.connect(
 
 bot = commands.Bot(command_prefix='!')
 
+# default_channel to set a default channel to send messages
+default_channel = int(os.getenv("CHANNEL_ID"))
+
 # events for the bot to work
 @bot.event
 async def on_ready():
     print("We have logged in as {0.user}".format(bot))   # 0 becomes client and user is how you get the username
+    channel = bot.get_channel(default_channel)
+    if channel:
+        await channel.send("Bot is back online. Ready for commands.")
     # check_time.start()
 
 # function for whenever a message is sent

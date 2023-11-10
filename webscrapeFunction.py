@@ -23,7 +23,7 @@ def redflagsPostings():
         div.decompose()
     target = soup.select('li.row.topic')
     ids = soup.select('div.thread_meta_large_primary')
-    print('ids: {}'.format(ids))
+    # print('ids: {}'.format(ids))
     end = time.time()
     duration = end-start
     return ids, target
