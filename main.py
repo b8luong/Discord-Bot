@@ -1,14 +1,17 @@
+import asyncio
+import logging
+import os
+import re
+
+import discord
+import mysql.connector
+from discord.ext import commands
 from discord.ext.commands import bot
 from dotenv import load_dotenv
 from flask import Flask
-import discord
-from discord.ext import tasks, commands
+
 from extFunction import OCR, translate2
 from webscrapeFunction import redflagsEmbed, redflagsPostings
-import logging
-import os
-import mysql.connector
-import asyncio
 
 # error logging
 logging.basicConfig(level=logging.INFO)
@@ -49,13 +52,20 @@ bot = commands.Bot(command_prefix='!')
 # default_channel to set a default channel to send messages
 default_channel = int(os.getenv("CHANNEL_ID"))
 
+# bot sends on_ready message sometimes when it's been online. need to only send when bot comes online for the first time
+bot_status = False
+
 # events for the bot to work
 @bot.event
 async def on_ready():
     print("We have logged in as {0.user}".format(bot))   # 0 becomes client and user is how you get the username
-    channel = bot.get_channel(default_channel)
-    if channel:
-        await channel.send("Bot is back online. Ready for commands.")
+    global bot_status
+    if bot_status == False:
+        bot_status = True
+        channel = bot.get_channel(default_channel)
+        if channel==True:
+            await channel.send("Bot is back online and ready.")
+    await read_previous_messages(channel, 20)
     # check_time.start()
 
 # function for whenever a message is sent
@@ -81,6 +91,37 @@ async def on_message(message):
         await bot.process_commands(message)
     except:
         return
+
+async def read_previous_messages(channel, num_messages):
+    # Retrieve the last 'num_messages' messages from the channel
+    messages = await channel.history(limit=num_messages).flatten()
+
+    # Process and print the retrieved messages
+    for message in messages:
+        print(f'{message.author}: {message.content}')
+        if message.embeds:
+            for embed in message.embeds:
+                print(embed)
+                # Access embed fields and attributes
+                title = embed.title
+                description = embed.description
+                author = embed.author
+                fields = embed.fields  # List of embed fields
+
+                # Process the information from the embed as needed
+            print(title, description, author, fields)
+                # You can print or use this information in your code
+
+            # Process the text content of the message if it's not an embed
+        else:
+            text_content = message.content
+            # Process the text content as needed
+
+# Example usage of the read_previous_messages function
+@bot.command(name='example_command')
+async def example_command(ctx):
+    await read_previous_messages(ctx.channel, 20)  # Replace 10 with the number of messages you want to retrieve
+
 
     # if msg.startswith("!setdate"):
     #     # split the message on the command word
@@ -124,59 +165,72 @@ async def on_message(message):
     #     # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
     #     await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
 
+# a variable to track if a command like !rfd is already running due to while True loop:
+command_status = False
+
 @bot.command()
 async def rfd(ctx):
     ids = [0]
-    while True:
-        try:
-            ids2, soupPostings = redflagsPostings()
-            # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
-            oldPost = 0
-            if ids != ids2:
-                print("There was a change")
-                for i in range(len(ids)):
-                    for j in range(len(ids2)):
-                        if ids[i] == ids2[j]:
-                            oldPost = j
+    global command_status
+    # if command is already running, don't run again
+    if command_status == True:
+        await ctx.send("Command is already running")
+        return
+    else:
+        command_status = True
+        while True:
+            try:
+                ids2, soupPostings = redflagsPostings()
+                # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
+                oldPost = 0
+                if ids != ids2:
+                    print("There was a change")
+                    for i in range(len(ids)):
+                        for j in range(len(ids2)):
+                            if ids[i] == ids2[j]:
+                                oldPost = j
+                                break
+                        # if we went through all the ids, just send the last 5 posts
+                            elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
+                                oldPost = 5
+                        # once we find a matching post, break out of outer loop
+                        if oldPost != 0:
                             break
-                    # if we went through all the ids, just send the last 5 posts
-                        elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
-                            oldPost = 5
-                    # once we find a matching post, break out of outer loop
-                    if oldPost != 0:
-                        break
-                # keep track of where the latest old post in the new postings list
-                print(oldPost)
-                # returning only the new posts
-                soupPostings = soupPostings[0:oldPost]
-                urls, titles, postings = redflagsEmbed(soupPostings)
-                print("postings made it here (if error occurred)")
-                for i in range(len(postings)):
-                    description = ""
-                    url = urls[i]
-                    title = titles[i]
-                    posting = postings[i]
-                    for key in posting:
-                        if key == "Deal Link:":
-                            if len(posting[key]) > 50:
-                                shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                    # keep track of where the latest old post in the new postings list
+                    print(oldPost)
+                    # returning only the new posts
+                    soupPostings = soupPostings[0:oldPost]
+                    urls, titles, postings = redflagsEmbed(soupPostings)
+                    print("postings made it here (if error occurred)")
+                    for i in range(len(postings)):
+                        description = ""
+                        url = urls[i]
+                        title = titles[i]
+                        posting = postings[i]
+                        for key in posting:
+                            if key == "Deal Link:":
+                                if len(posting[key]) > 50:
+                                    shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                                else:
+                                    shortenedURL = posting[key]
+                                # making the url start with www instead of https:// as discord hyperlink shortcut does not
+                                # work with https://
+                                shortenedURL = re.sub(r'https?://', '', shortenedURL)
+                                description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
                             else:
-                                shortenedURL = posting[key]
-                            description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
-                        else:
-                            description += "**{}** {}\n".format(key, posting[key])
-                    string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
-                    string2 = string[0:40] + " ... " + string[-10:]
-                    embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
-                    await ctx.send(embed=embed)
-            ids = ids2
-            print("End of command")
-            await asyncio.sleep(120)
-        except Exception as e:
-            print("error")
-            print(e)
-            await ctx.send("There was an error")
-            await asyncio.sleep(120)
+                                description += "**{}** {}\n".format(key, posting[key])
+                        string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
+                        string2 = string[0:40] + " ... " + string[-10:]
+                        embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
+                        await ctx.send(embed=embed)
+                ids = ids2
+                print("End of command")
+                await asyncio.sleep(120)
+            except Exception as e:
+                print("error")
+                print(e)
+                await ctx.send("There was an error")
+                await asyncio.sleep(120)
 
 
 @bot.command()
