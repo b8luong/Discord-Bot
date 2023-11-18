@@ -63,9 +63,9 @@ async def on_ready():
     if bot_status == False:
         bot_status = True
         channel = bot.get_channel(default_channel)
-        if channel==True:
+        if channel:
             await channel.send("Bot is back online and ready.")
-    await read_previous_messages(channel, 20)
+    # await read_previous_messages(channel, 20)
     # check_time.start()
 
 # function for whenever a message is sent
