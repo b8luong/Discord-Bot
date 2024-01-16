@@ -108,11 +108,11 @@ async def read_previous_messages(channel, num_messages):
                 author = embed.author
                 fields = embed.fields  # List of embed fields
                 link = re.search(r"\*\*RFD Link: \*\*\s*(https?://[^\s]+)", description)
+                if link is not None:
+                    links.append(link.group(1))
                 # Process the information from the embed as needed
             # print(title, description, author, fields)
-            links.append(link.group(1))
     return links
-                # You can print or use this information in your code
 
 # Example usage of the read_previous_messages function
 @bot.command(name='example_command')
