@@ -15,18 +15,26 @@ def redflagsPostings():
     # getting the response from the website
     response = requests.get(url, headers=headers)
     # beautifulsoup to parse the html
-    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = BeautifulSoup(response.content, 'html.parser', from_encoding='utf-8')
     # remove sticky (aka ad posts)
     for div in soup.find_all("li", {'class':'sticky'}):
         div.decompose()
     for div in soup.find_all("li", {'class':'deleted'}):
         div.decompose()
     target = soup.select('li.row.topic')
-    ids = soup.select('div.thread_meta_large_primary')
+    # ids = soup.select('div.thread_meta_large_primary')
+    # select all <a> elements with class topic_title_link
+    elements = soup.select('a.topic_title_link')
+    # href still needs to be extracted from these elements which will be used as post identifiers
+    ids = [element['href'] for element in elements]
     # print('ids: {}'.format(ids))
+    # combining the root URL and the href to get a full link
+    homeURL = "https://forums.redflagdeals.com"
+    finalIds = [homeURL+id for id in ids]
     end = time.time()
     duration = end-start
-    return ids, target
+    # print(finalIds)
+    return finalIds, target
 
 # function to return things that is necessary to create an embed
 def redflagsEmbed(postings):
@@ -41,7 +49,7 @@ def redflagsEmbed(postings):
         fullURL = homeURL + postURL
         output = {}
         response = requests.get(fullURL, headers=headers)
-        soup = BeautifulSoup(response.content, 'html.parser')
+        soup = BeautifulSoup(response.content, 'html.parser', from_encoding='utf-8')
         # print(soup)
         details = soup.find("dl", {'class':"post_offer_fields"})
         if details:

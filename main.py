@@ -60,12 +60,12 @@ bot_status = False
 async def on_ready():
     print("We have logged in as {0.user}".format(bot))   # 0 becomes client and user is how you get the username
     global bot_status
+    global channel
     if bot_status == False:
         bot_status = True
         channel = bot.get_channel(default_channel)
         if channel:
             await channel.send("Bot is back online and ready.")
-    # await read_previous_messages(channel, 20)
     # check_time.start()
 
 # function for whenever a message is sent
@@ -95,32 +95,29 @@ async def on_message(message):
 async def read_previous_messages(channel, num_messages):
     # Retrieve the last 'num_messages' messages from the channel
     messages = await channel.history(limit=num_messages).flatten()
-
+    links = list()
     # Process and print the retrieved messages
     for message in messages:
-        print(f'{message.author}: {message.content}')
+        # print(f'{message.author}: {message.content}')
         if message.embeds:
             for embed in message.embeds:
-                print(embed)
+                # print(embed)
                 # Access embed fields and attributes
                 title = embed.title
                 description = embed.description
                 author = embed.author
                 fields = embed.fields  # List of embed fields
-
+                link = re.search(r"\*\*RFD Link: \*\*\s*(https?://[^\s]+)", description)
                 # Process the information from the embed as needed
-            print(title, description, author, fields)
+            # print(title, description, author, fields)
+            links.append(link.group(1))
+    return links
                 # You can print or use this information in your code
-
-            # Process the text content of the message if it's not an embed
-        else:
-            text_content = message.content
-            # Process the text content as needed
 
 # Example usage of the read_previous_messages function
 @bot.command(name='example_command')
 async def example_command(ctx):
-    await read_previous_messages(ctx.channel, 20)  # Replace 10 with the number of messages you want to retrieve
+    await read_previous_messages(ctx.channel, 20)
 
 
     # if msg.startswith("!setdate"):
@@ -168,45 +165,65 @@ async def example_command(ctx):
 # a variable to track if a command like !rfd is already running due to while True loop:
 command_status = False
 
+# a restart command for when the bot goes into an error loop or stops sending messages
+async def restart(ctx):
+    global command_status
+    command_status = False
+    await ctx.send("Bot will restart the command loop after stopping.")
+
 @bot.command()
 async def rfd(ctx):
-    ids = [0]
+    # read previous messages to look for previous postings so there is no duplicate postings sent
+    ids = await read_previous_messages(ctx.channel, 50)
+
+    # a variable to track if a command like !rfd is already running due to while True loop:
     global command_status
     # if command is already running, don't run again
     if command_status == True:
         await ctx.send("Command is already running")
         return
     else:
+        # set flag to true so command only runs once at all times
         command_status = True
         while True:
             try:
+                # grabbing all postings from the page (still needs to be parsed)
                 ids2, soupPostings = redflagsPostings()
                 # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
-                oldPost = 0
+                # print("=====================")
+                # print(ids, ids2)
+                # print("=====================")
+                oldPost = False
                 if ids != ids2:
-                    print("There was a change")
+                    # print("There was a change")
                     for i in range(len(ids)):
                         for j in range(len(ids2)):
+                            # print(ids2)
+                            # homeURL = "https://forums.redflagdeals.com"
+                            # postURL1 = ids2[j]
+                            # print(homeURL + postURL1)
                             if ids[i] == ids2[j]:
                                 oldPost = j
+                                # print(j)
                                 break
-                        # if we went through all the ids, just send the last 5 posts
+                        # if we went through all the ids, just send all new posts for the page
                             elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
-                                oldPost = 5
+                                oldPost = j
+                                # print("sending all posts")
                         # once we find a matching post, break out of outer loop
-                        if oldPost != 0:
+                        if oldPost != False:
                             break
-                    # keep track of where the latest old post in the new postings list
-                    print(oldPost)
                     # returning only the new posts
                     soupPostings = soupPostings[0:oldPost]
                     urls, titles, postings = redflagsEmbed(soupPostings)
-                    print("postings made it here (if error occurred)")
+                    # print(urls, titles, postings)
                     for i in range(len(postings)):
                         description = ""
                         url = urls[i]
                         title = titles[i]
                         posting = postings[i]
+                        # Adding an identifier of RFD link to each post
+                        description += "**{}** {}\n".format("RFD Link: ", url)
                         for key in posting:
                             if key == "Deal Link:":
                                 if len(posting[key]) > 50:
@@ -224,11 +241,12 @@ async def rfd(ctx):
                         embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
                         await ctx.send(embed=embed)
                 ids = ids2
-                print("End of command")
+                # print("End of command")
                 await asyncio.sleep(120)
             except Exception as e:
                 print("error")
                 print(e)
+                await ctx.author.send(e)
                 await ctx.send("There was an error")
                 await asyncio.sleep(120)
 
