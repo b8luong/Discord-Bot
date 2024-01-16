@@ -175,7 +175,6 @@ async def restart(ctx):
 async def rfd(ctx):
     # read previous messages to look for previous postings so there is no duplicate postings sent
     ids = await read_previous_messages(ctx.channel, 50)
-
     # a variable to track if a command like !rfd is already running due to while True loop:
     global command_status
     # if command is already running, don't run again
@@ -195,24 +194,28 @@ async def rfd(ctx):
                 # print("=====================")
                 oldPost = False
                 if ids != ids2:
-                    # print("There was a change")
-                    for i in range(len(ids)):
-                        for j in range(len(ids2)):
-                            # print(ids2)
-                            # homeURL = "https://forums.redflagdeals.com"
-                            # postURL1 = ids2[j]
-                            # print(homeURL + postURL1)
-                            if ids[i] == ids2[j]:
-                                oldPost = j
-                                # print(j)
+                    # Use case for when command is first ran and there was no previous messages
+                    if ids == []:
+                        oldPost = len(ids2)
+                    else:
+                        # print("There was a change")
+                        for i in range(len(ids)):
+                            for j in range(len(ids2)):
+                                # print(ids2)
+                                # homeURL = "https://forums.redflagdeals.com"
+                                # postURL1 = ids2[j]
+                                # print(homeURL + postURL1)
+                                if ids[i] == ids2[j]:
+                                    oldPost = j
+                                    # print(j)
+                                    break
+                            # if we went through all the ids, just send all new posts for the page
+                                elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
+                                    oldPost = j
+                                    # print("sending all posts")
+                            # once we find a matching post, break out of outer loop
+                            if oldPost != False:
                                 break
-                        # if we went through all the ids, just send all new posts for the page
-                            elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
-                                oldPost = j
-                                # print("sending all posts")
-                        # once we find a matching post, break out of outer loop
-                        if oldPost != False:
-                            break
                     # returning only the new posts
                     soupPostings = soupPostings[0:oldPost]
                     urls, titles, postings = redflagsEmbed(soupPostings)
@@ -241,7 +244,7 @@ async def rfd(ctx):
                         embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
                         await ctx.send(embed=embed)
                 ids = ids2
-                # print("End of command")
+                print("Done")
                 await asyncio.sleep(120)
             except Exception as e:
                 print("error")
