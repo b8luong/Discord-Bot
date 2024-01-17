@@ -21,24 +21,24 @@ load_dotenv()
 
 # initializing variables from env file
 TOKEN = os.getenv("TOKEN")
-app_id = os.getenv("APP_ID")
-public_key = os.getenv("PUBLIC_KEY")
+# app_id = os.getenv("APP_ID")
+# public_key = os.getenv("PUBLIC_KEY")
 # mySql credentials
-sqlHost = os.getenv("host")
-sqlUser = os.getenv("user")
-sqlPasswd = os.getenv("passwd")
-sqlDatabase = os.getenv("database")
-# Creating flask app.
-app = Flask(__name__)
-
-# initializing mysql db
-db = mysql.connector.connect(
-    host=sqlHost,
-    user=sqlUser,
-    passwd=sqlPasswd,
-    database=sqlDatabase,
-    autocommit=True
-)
+# sqlHost = os.getenv("host")
+# sqlUser = os.getenv("user")
+# sqlPasswd = os.getenv("passwd")
+# sqlDatabase = os.getenv("database")
+# # Creating flask app.
+# app = Flask(__name__)
+#
+# # initializing mysql db
+# db = mysql.connector.connect(
+#     host=sqlHost,
+#     user=sqlUser,
+#     passwd=sqlPasswd,
+#     database=sqlDatabase,
+#     autocommit=True
+# )
 
 
 # mycursor.execute("CREATE DATABASE reminders")
