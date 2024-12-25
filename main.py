@@ -21,31 +21,6 @@ load_dotenv()
 
 # initializing variables from env file
 TOKEN = os.getenv("TOKEN")
-# app_id = os.getenv("APP_ID")
-# public_key = os.getenv("PUBLIC_KEY")
-# mySql credentials
-# sqlHost = os.getenv("host")
-# sqlUser = os.getenv("user")
-# sqlPasswd = os.getenv("passwd")
-# sqlDatabase = os.getenv("database")
-# # Creating flask app.
-# app = Flask(__name__)
-#
-# # initializing mysql db
-# db = mysql.connector.connect(
-#     host=sqlHost,
-#     user=sqlUser,
-#     passwd=sqlPasswd,
-#     database=sqlDatabase,
-#     autocommit=True
-# )
-
-
-# mycursor.execute("CREATE DATABASE reminders")
-# mycursor.execute("CREATE TABLE reminders (id INT AUTO_INCREMENT PRIMARY KEY, date VARCHAR(255), who VARCHAR(255), what VARCHAR(255), remind VARCHAR(255))")
-
-# # basic bot example
-# client = discord.Client()
 
 bot = commands.Bot(command_prefix='!')
 
@@ -98,75 +73,35 @@ async def read_previous_messages(channel, num_messages):
     links = list()
     # Process and print the retrieved messages
     for message in messages:
-        # print(f'{message.author}: {message.content}')
         if message.embeds:
             for embed in message.embeds:
-                # print(embed)
                 # Access embed fields and attributes
-                title = embed.title
                 description = embed.description
+                # Not needed but kept for future use if needed
+                title = embed.title
                 author = embed.author
-                fields = embed.fields  # List of embed fields
+                fields = embed.fields
                 link = re.search(r"\*\*RFD Link: \*\*\s*(https?://[^\s]+)", description)
                 if link is not None:
                     links.append(link.group(1))
-                # Process the information from the embed as needed
             # print(title, description, author, fields)
     return links
 
-# Example usage of the read_previous_messages function
-@bot.command(name='example_command')
-async def example_command(ctx):
-    await read_previous_messages(ctx.channel, 20)
-
-
-    # if msg.startswith("!setdate"):
-    #     # split the message on the command word
-    #     content = msg.split("!setdate",1)[1]
-    #     print(content)
-    #     list = content.split("\n")
-    #     print(list)
-    #
-    #     # variable for the time and date
-    #     when_str = list[1].split("When: ",1)[1]
-    #     date_obj = dateutil.parser.parse(when_str)
-    #     date_obj = date_obj.strftime("%m/%d/%Y %H:%M")
-    #     print(date_obj)
-    #
-    #
-    #     # variable to store the people to mention for the reminder
-    #     who = list[2].split("Who: ",1)[1]
-    #     print(who)
-    #     # variable to store the message to remind
-    #     what = list[3].split("What: ",1)[1]
-    #     print(what)
-    #     # variable store how often to remind
-    #     remind = list[4].split("Remind: ",1)[1]
-    #     print(remind)
-    #     # cursor for database
-    #     mycursor = db.cursor()
-    #     # store into table for the future
-    #     mycursor.execute("INSERT INTO reminders VALUES(NULL, %s, %s, %s, %s)",(str(date_obj),who,what,remind))
-    #     db.commit()
-    #
-    #     # test code for querying for table data
-    #     mycursor.execute("SELECT * FROM reminders")
-    #     table = mycursor.fetchall()
-    #     for rows in table:
-    #         print(rows)
-    #     mycursor.execute("SELECT date FROM reminders WHERE id")
-    #     all_dates = mycursor.fetchall()
-    #
-    #     # grab the user id for who set the reminder
-    #     user = message.author.id
-    #     # await message.channel.send(f"<@{user}> Reminder has been set. \n{content} ")
-    #     await message.channel.send(f"<@{user}>\nWhen: {when_str}\nWho: {who}\nWhat: {what}\n")
+# WORK IN PROGRESS COMMAND TO CREATE SPECIFIC ALERTS
+@bot.command()
+async def test(ctx):
+    msgs = await ctx.channel.history().flatten()
+    for msg in msgs:
+        if bot.user in msg.mentions:
+            print(f"{msg.author}{msg.content}")
+            print("I was mentioned here")
 
 # a variable to track if a command like !rfd is already running due to while True loop:
 command_status = False
 
-# a restart command for when the bot goes into an error loop or stops sending messages
-async def restart(ctx):
+# a stop command for when the bot goes into an error loop or stops sending messages
+@bot.command()
+async def stop(ctx):
     global command_status
     command_status = False
     await ctx.send("Bot will restart the command loop after stopping.")
@@ -185,73 +120,76 @@ async def rfd(ctx):
         # set flag to true so command only runs once at all times
         command_status = True
         while True:
-            try:
-                # grabbing all postings from the page (still needs to be parsed)
-                ids2, soupPostings = redflagsPostings()
-                # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
-                # print("=====================")
-                # print(ids, ids2)
-                # print("=====================")
-                oldPost = False
-                if ids != ids2:
-                    # Use case for when command is first ran and there was no previous messages
-                    if ids == []:
-                        oldPost = len(ids2)
-                    else:
-                        # print("There was a change")
-                        for i in range(len(ids)):
-                            for j in range(len(ids2)):
-                                # print(ids2)
-                                # homeURL = "https://forums.redflagdeals.com"
-                                # postURL1 = ids2[j]
-                                # print(homeURL + postURL1)
-                                if ids[i] == ids2[j]:
-                                    oldPost = j
-                                    # print(j)
+            # command_status can be set to false by calling !restart
+            if command_status == False:
+                print("broken")
+                break
+            else:
+                try:
+                    # grabbing all postings from the page (still needs to be parsed)
+                    ids2, soupPostings = redflagsPostings()
+                    # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
+                    oldPost = False
+                    if ids != ids2:
+                        # Use case for when command is first ran and there was no previous messages
+                        if ids == []:
+                            oldPost = len(ids2)
+                        else:
+                            # print("There was a change")
+                            for i in range(len(ids)):
+                                for j in range(len(ids2)):
+                                    # print(ids2)
+                                    # homeURL = "https://forums.redflagdeals.com"
+                                    # postURL1 = ids2[j]
+                                    # print(homeURL + postURL1)
+                                    if ids[i] == ids2[j]:
+                                        oldPost = j
+                                        # print(j)
+                                        break
+                                # if we went through all the ids, just send all new posts for the page
+                                    elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
+                                        oldPost = j
+                                        # print("sending all posts")
+                                # once we find a matching post, break out of outer loop
+                                if oldPost != False:
                                     break
-                            # if we went through all the ids, just send all new posts for the page
-                                elif ids2[-1] == ids2[j] and ids[-1] == ids[i] and ids[0] != ids2[j]:
-                                    oldPost = j
-                                    # print("sending all posts")
-                            # once we find a matching post, break out of outer loop
-                            if oldPost != False:
-                                break
-                    # returning only the new posts
-                    soupPostings = soupPostings[0:oldPost]
-                    urls, titles, postings = redflagsEmbed(soupPostings)
-                    # print(urls, titles, postings)
-                    for i in range(len(postings)):
-                        description = ""
-                        url = urls[i]
-                        title = titles[i]
-                        posting = postings[i]
-                        # Adding an identifier of RFD link to each post
-                        description += "**{}** {}\n".format("RFD Link: ", url)
-                        for key in posting:
-                            if key == "Deal Link:":
-                                if len(posting[key]) > 50:
-                                    shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                        # returning only the new posts
+                        soupPostings = soupPostings[0:oldPost]
+                        # print(soupPostings)
+                        urls, titles, postings = redflagsEmbed(soupPostings)
+                        # print(urls, titles, postings)
+                        for i in range(len(postings)):
+                            description = ""
+                            url = urls[i]
+                            title = titles[i]
+                            posting = postings[i]
+                            # Adding an identifier of RFD link to each post
+                            description += "**{}** {}\n".format("RFD Link: ", url)
+                            for key in posting:
+                                if key == "Deal Link:":
+                                    if len(posting[key]) > 50:
+                                        shortenedURL = posting[key][0:40] + "..." + posting[key][-10:]
+                                    else:
+                                        shortenedURL = posting[key]
+                                    # making the url start with www instead of https:// as discord hyperlink shortcut does not
+                                    # work with https://
+                                    shortenedURL = re.sub(r'https?://', '', shortenedURL)
+                                    description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
                                 else:
-                                    shortenedURL = posting[key]
-                                # making the url start with www instead of https:// as discord hyperlink shortcut does not
-                                # work with https://
-                                shortenedURL = re.sub(r'https?://', '', shortenedURL)
-                                description += "**{}** [{}]({})\n".format(key, shortenedURL, posting[key])
-                            else:
-                                description += "**{}** {}\n".format(key, posting[key])
-                        string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
-                        string2 = string[0:40] + " ... " + string[-10:]
-                        embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
-                        await ctx.send(embed=embed)
-                ids = ids2
-                print("Done")
-                await asyncio.sleep(120)
-            except Exception as e:
-                print("error")
-                print(e)
-                await ctx.author.send(e)
-                await ctx.send("There was an error")
-                await asyncio.sleep(120)
+                                    description += "**{}** {}\n".format(key, posting[key])
+                            string = "http://www.amazon.ca/gp/redirect.html?ie=UTF8&location=https%3A%2F%2Fwww.amazon.ca%2FACCO-Fold-Back-Binder-1-25-Inch-Medium%2Fdp%2FB0035OQGA6%2F&tag=redflagdealsc-20&linkCode=ur2&camp=15121&creative=330641"
+                            string2 = string[0:40] + " ... " + string[-10:]
+                            embed=discord.Embed(title=title, url=url, description=description, color=0xFF5733)
+                            await ctx.send(embed=embed)
+                    ids = ids2
+                    print("Done")
+                    await asyncio.sleep(120)
+                except Exception as e:
+                    print("error")
+                    print(e)
+                    await ctx.author.send(e)
+                    await ctx.send("There was an error")
+                    await asyncio.sleep(120)
 
 
 @bot.command()
@@ -289,7 +227,6 @@ async def translate(ctx,*args):
 # checking every minute to see if its time to remind
 # @tasks.loop(minutes=1)
 # async def check_time():
-#     channel = client.get_channel(839197220431331349)
 #     # await channel.send("hello")
 #     mycursor = db.cursor()
 #     mycursor.execute("SELECT date FROM reminders")

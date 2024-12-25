@@ -4,6 +4,30 @@ from googletrans import Translator, constants
 import pytesseract
 import urllib.request
 import pycountry
+import easyocr
+
+# def OCR(imgURL, language):
+#     # EasyOCR supports language codes directly, for Chinese use 'ch_sim' (Simplified) or 'ch_tra' (Traditional)
+#     if language.lower() == "chinese":
+#         language = 'ch_tra'  # Assuming Traditional Chinese, change to 'ch_sim' if you want Simplified Chinese
+#
+#     # Download the image from the URL
+#     opener = urllib.request.build_opener()
+#     opener.addheaders = [('User-agent', 'Mozilla/5.0')]
+#     urllib.request.install_opener(opener)
+#     imgURL, headers = urllib.request.urlretrieve(imgURL)
+#
+#     # Initialize EasyOCR Reader with the specified language
+#     reader = easyocr.Reader([language])
+#
+#     # Read text from the image
+#     result = reader.readtext(imgURL)
+#
+#     # Concatenate all detected text into a single string
+#     detected_text = " ".join([text for _, text, _ in result])
+#     print(detected_text)
+#     return detected_text
+
 
 def OCR(imgURL, language):
     if language != "chinese":

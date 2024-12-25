@@ -14,17 +14,20 @@ def redflagsPostings():
     url = "https://forums.redflagdeals.com/hot-deals-f9/?sk=tt&rfd_sk=tt&sd=d"
     # getting the response from the website
     response = requests.get(url, headers=headers)
+    # print(response)
     # beautifulsoup to parse the html
     soup = BeautifulSoup(response.content, 'html.parser', from_encoding='utf-8')
+    print(soup)
     # remove sticky (aka ad posts)
     for div in soup.find_all("li", {'class':'sticky'}):
         div.decompose()
     for div in soup.find_all("li", {'class':'deleted'}):
         div.decompose()
-    target = soup.select('li.row.topic')
+    target = soup.select('li.topic')
+    # print(target)
     # ids = soup.select('div.thread_meta_large_primary')
     # select all <a> elements with class topic_title_link
-    elements = soup.select('a.topic_title_link')
+    elements = soup.select('a.thread_title_link')
     # href still needs to be extracted from these elements which will be used as post identifiers
     ids = [element['href'] for element in elements]
     # print('ids: {}'.format(ids))
@@ -44,13 +47,14 @@ def redflagsEmbed(postings):
     urlList = []
     titleList = []
     outputList = []
+    print(postings)
     for i in range(len(postings)-1,-1,-1):
-        postURL = postings[i].find(class_ = "topic_title_link")['href']
+        postURL = postings[i].find(class_ = "thread_title_link")['href']
         fullURL = homeURL + postURL
         output = {}
         response = requests.get(fullURL, headers=headers)
         soup = BeautifulSoup(response.content, 'html.parser', from_encoding='utf-8')
-        # print(soup)
+        print(soup)
         details = soup.find("dl", {'class':"post_offer_fields"})
         if details:
             dt = details.find_all("dt")
