@@ -72,7 +72,10 @@ def redflagsEmbed(postings):
             else:
                 firstURL = "No Link"
             output["Deal Link:"] = firstURL
-            output["Body:"] = body.text
+            if len(body.text) <= 3750:
+                output["Body:"] = body.text
+            else:
+                output["Body:"] = body.text[:3750] + "..."
         title = soup.find("h2", {'class': 'post_title first'}).text
         urlList.append(fullURL)
         titleList.append(title)
