@@ -120,7 +120,7 @@ async def rfd(ctx):
         # set flag to true so command only runs once at all times
         command_status = True
         while True:
-            # command_status can be set to false by calling !restart
+            # command_status can be set to false by calling !stop
             if command_status == False:
                 print("broken")
                 break
@@ -130,6 +130,7 @@ async def rfd(ctx):
                     ids2, soupPostings = redflagsPostings()
                     # comparing posts to see where the lastest post of ids is in ids2 to see which posts are old so we don't parse them again
                     oldPost = False
+                    print(ids, ids2)
                     if ids != ids2:
                         # Use case for when command is first ran and there was no previous messages
                         if ids == []:
